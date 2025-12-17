@@ -1,0 +1,141 @@
+/*
+ * UltraOS x86_64 Linker Script
+ * Author: zeroday
+ * Date: 2025-12-17
+ * Version: 2.0
+ */
+
+OUTPUT_FORMAT("elf64-x86-64")
+OUTPUT_ARCH(i386:x86-64)
+ENTRY(_start)
+
+SECTIONS
+{
+    /* Kernel starts at 1MB */
+    . = 1M;
+
+    /* Boot code section */
+    .boot BLOCK(4K) : ALIGN(4K)
+    {
+        *(.boot)
+    }
+
+    /* Text section - executable code */
+    .text BLOCK(4K) : ALIGN(4K)
+    {
+        *(.text)
+        *(.text.*)
+        *(.gnu.linkonce.t.*)
+    }
+
+    /* Read-only data section */
+    .rodata BLOCK(4K) : ALIGN(4K)
+    {
+        *(.rodata)
+        *(.rodata.*)
+        *(.gnu.linkonce.r.*)
+    }
+
+    /* Exception handling data */
+    .eh_frame BLOCK(4K) : ALIGN(4K)
+    {
+        KEEP(*(.eh_frame))
+        *(.eh_frame.*)
+    }
+
+    /* Exception handling tables */
+    .gcc_except_table BLOCK(4K) : ALIGN(4K)
+    {
+        *(.gcc_except_table)
+        *(.gcc_except_table.*)
+    }
+
+    /* Data section - initialized data */
+    .data BLOCK(4K) : ALIGN(4K)
+    {
+        *(.data)
+        *(.data.*)
+        *(.gnu.linkonce.d.*)
+    }
+
+    /* Small data section */
+    .sdata BLOCK(4K) : ALIGN(4K)
+    {
+        *(.sdata)
+        *(.sdata.*)
+        *(.gnu.linkonce.s.*)
+    }
+
+    /* BSS section - uninitialized data */
+    .bss BLOCK(4K) : ALIGN(4K)
+    {
+        *(.bss)
+        *(.bss.*)
+        *(.gnu.linkonce.b.*)
+        *(COMMON)
+    }
+
+    /* Small BSS section */
+    .sbss BLOCK(4K) : ALIGN(4K)
+    {
+        *(.sbss)
+        *(.sbss.*)
+        *(.gnu.linkonce.sb.*)
+    }
+
+    /* No-read section - data that should not be readable */
+    .noload BLOCK(4K) : ALIGN(4K)
+    {
+        *(.noload)
+    }
+
+    /* Discard unwanted sections */
+    /DISCARD/ :
+    {
+        *(.comment)
+        *(.note*)
+        *(.debug*)
+        *(.line)
+        *(.symtab)
+        *(.shstrtab)
+        *(.strtab)
+        *(.interp)
+        *(.dynamic)
+        *(.hash)
+        *(.gnu.hash)
+        *(.gnu.version)
+        *(.gnu.version_d)
+        *(.gnu.version_r)
+        *(.rel*)
+        *(.rela*)
+        *(.plt)
+        *(.got)
+        *(.got.plt)
+    }
+}
+
+/* Symbol definitions */
+SIZEOF(.text) = SIZEOF(.text);
+SIZEOF(.rodata) = SIZEOF(.rodata);
+SIZEOF(.data) = SIZEOF(.data);
+SIZEOF(.bss) = SIZEOF(.bss);
+SIZEOF(.sbss) = SIZEOF(.sbss);
+
+/* Memory layout information */
+PROVIDE(__kernel_start = DEFINED(.boot) ? ADDR(.boot) : 1M);
+PROVIDE(__kernel_end = DEFINED(.bss) ? ADDR(.bss) + SIZEOF(.bss) : DEFINED(.sbss) ? ADDR(.sbss) + SIZEOF(.sbss) : DEFINED(.data) ? ADDR(.data) + SIZEOF(.data) : DEFINED(.text) ? ADDR(.text) + SIZEOF(.text) : 1M + 1M);
+
+/* Section alignment requirements */
+PROVIDE(__text_start = ADDR(.text));
+PROVIDE(__text_end = ADDR(.text) + SIZEOF(.text));
+PROVIDE(__rodata_start = ADDR(.rodata));
+PROVIDE(__rodata_end = ADDR(.rodata) + SIZEOF(.rodata));
+PROVIDE(__data_start = ADDR(.data));
+PROVIDE(__data_end = ADDR(.data) + SIZEOF(.data));
+PROVIDE(__bss_start = ADDR(.bss));
+PROVIDE(__bss_end = ADDR(.bss) + SIZEOF(.bss));
+PROVIDE(__sbss_start = ADDR(.sbss));
+PROVIDE(__sbss_end = ADDR(.sbss) + SIZEOF(.sbss));
+
+/* Entry point */
+PROVIDE(_start = DEFINED(.boot) ? ADDR(.boot) : 1M);
